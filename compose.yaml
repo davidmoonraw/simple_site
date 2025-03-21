@@ -1,0 +1,89 @@
+services:
+
+  web:
+    container_name: ${WEB_CONTAINER_NAME}
+    hostname: ${WEB_HOSTNAME}
+    build:
+      context: .
+      dockerfile: ${WEB_BUILD_DOCKERFILE}
+      target: ${WEB_BUILD_TARGET}
+    networks:
+      net:
+        ipv4_address: 172.25.5.5
+    ports:
+    - ${WEB_PORT_MAPPING}
+    attach: ${WEB_ATTACH}
+    restart: ${WEB_RESTART}
+
+  server: #service name
+    container_name: ${SERVER_CONTAINER_NAME}
+    hostname: ${SERVER_HOSTNAME}
+    build:
+      context: . #path to a directory containing a Dockerfile
+      dockerfile: ${SERVER_BUILD_DOCKERFILE} # Use the Dockerfile in the root of repo
+      target: ${SERVER_BUILD_TARGET} #Dockerfile stage
+    environment: # array type
+      - NODE_ENV=${SERVER_ENV_NODE_ENV}
+      - MONGO_HOST=${SERVER_ENV_MONGO_HOST}
+      - MONGO_USER=${SERVER_ENV_MONGO_USER}
+      - MONGO_KEY=${SERVER_ENV_MONGO_KEY}
+      - MONGO_CONNECTION_FORMAT=${SERVER_ENV_MONGO_CONNECTION_FORMAT}
+      - MONGO_HOSTNAME=${SERVER_ENV_MONGO_HOSTNAME}
+      - MONGO_PORT=${SERVER_ENV_MONGO_PORT}
+      - MONGO_DB_NAME=${SERVER_ENV_MONGO_DB_NAME}
+    networks: #compose adds(MAY ADD) project name as prefix to avoid naming conflicts
+      net:
+        ipv4_address: 172.25.5.3
+    ports: #port mappings between the host machine and the containers
+      - ${SERVER_PORT_MAPPING}
+    depends_on:  
+      - mongo #control the order of service startup and shutdown
+    attach: ${SERVER_ATTACH} #collect service logs
+    restart: ${SERVER_RESTART} #policy that the platform applies on container termination.
+
+  mongo:
+    container_name: ${MONGO_CONTAINER_NAME}
+    hostname: ${MONGO_HOSTNAME}
+    image: ${MONGO_IMAGE}
+    volumes:
+      - ./config/db-init.js:/docker-entrypoint-initdb.d/db-init.js:ro
+      - db_data:/data/db
+    networks:
+      net:
+        ipv4_address: 172.25.5.4
+    ports:
+      - ${MONGO_PORT_MAPPING}
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ENV_MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ENV_MONGO_INITDB_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_ENV_MONGO_INITDB_DATABASE}
+    attach: ${MONGO_ATTACH}
+    restart: ${MONGO_RESTART}
+
+  mongo-express:
+    container_name: ${MONGO_EXPRESS_CONTAINER_NAME}
+    image: ${MONGO_EXPRESS_IMAGE}
+    hostname: ${MONGO_EXPRESS_HOSTNAME}
+    networks:
+      - net
+    ports:
+      - ${MONGO_EXPRESS_PORT_MAPPING}
+    environment:
+      ME_CONFIG_MONGODB_URL: ${MONGO_EXPRESS_ME_CONFIG_MONGODB_URL}
+      ME_CONFIG_BASICAUTH: ${MONGO_EXPRESS_ME_CONFIG_BASICAUTH}
+    depends_on:  
+      - mongo
+    attach: ${MONGO_EXPRESS_ATTACH}
+    restart: ${MONGO_EXPRESS_RESTART}
+
+networks:
+  net:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.25.0.0/16
+          ip_range: 172.25.5.0/24
+          gateway: 172.25.5.254
+
+volumes:
+  db_data:

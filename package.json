@@ -1,0 +1,25 @@
+{
+    "name": "static-site",
+    "version": "0.0.0.2",
+    "description": "static-site",
+    "private": true,
+    "scripts": {
+        "start": "node ./server/index.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/davidmoonraw/pocbox.git"
+    },
+    "author": "myself",
+    "license": "ask me on github",
+    "bugs": {
+        "url": "https://github.com/davidmoonraw/pocbox/issues"
+    },
+    "homepage": "https://github.com/davidmoonraw/pocbox#readme",
+    "dependencies": {
+        "cors": "^2.8.5",
+        "express": "^4.21.2",
+        "mongoose": "^8.10.1",
+        "multer": "^1.4.5-lts.1"
+    }
+}
